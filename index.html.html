@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>支援者 自己点検ツール｜動機の層を知る</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;600&family=Noto+Sans+JP:wght@300;400;500&display=swap');
+
+:root {
+  --ink: #1a1a2e;
+  --paper: #f5f0e8;
+  --accent: #8b4e6b;
+  --accent2: #4e6b8b;
+  --accent3: #6b8b4e;
+  --muted: #9a8fa0;
+  --card: #fffdf8;
+  --border: #d4c8bc;
+  --shadow: rgba(26,26,46,0.08);
+  --warn: #c0622a;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Noto Sans JP', sans-serif;
+  background: var(--paper);
+  color: var(--ink);
+  min-height: 100vh;
+  background-image:
+    radial-gradient(ellipse at 20% 20%, rgba(139,78,107,0.06) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 80%, rgba(78,107,139,0.06) 0%, transparent 60%);
+}
+.container { max-width: 720px; margin: 0 auto; padding: 40px 20px 80px; }
+
+/* ── ヘッダー ── */
+.header { text-align: center; margin-bottom: 40px; }
+.header h1 {
+  font-family: 'Noto Serif JP', serif;
+  font-size: 1.7rem; font-weight: 600;
+  color: var(--ink); letter-spacing: 0.04em; margin-bottom: 8px;
+}
+.header .sub { font-size: 0.9rem; color: var(--muted); }
+
+/* ── 冒頭注意書きカード ── */
+.notice-card {
+  background: #fdf6ee;
+  border-left: 4px solid var(--warn);
+  border-radius: 8px;
+  padding: 20px 24px;
+  margin-bottom: 32px;
+  font-size: 0.92rem;
+  line-height: 1.8;
+  color: #4a3320;
+}
+.notice-card .notice-title {
+  font-weight: 700; font-size: 1rem;
+  color: var(--warn); margin-bottom: 8px;
+}
+.notice-card .notice-key {
+  margin-top: 12px;
+  padding: 10px 14px;
+  background: rgba(192,98,42,0.08);
+  border-radius: 6px;
+  font-size: 0.88rem;
+  font-style: italic;
+  color: #6b3a18;
+}
+
+/* ── 進捗バー ── */
+.progress-wrap { margin-bottom: 28px; }
+.progress-bar {
+  height: 6px; background: var(--border); border-radius: 3px; overflow: hidden;
+}
+.progress-fill {
+  height: 100%; background: var(--accent);
+  border-radius: 3px; transition: width 0.4s ease;
+  width: 0%;
+}
+.progress-label { font-size: 0.8rem; color: var(--muted); margin-top: 6px; text-align: right; }
+
+/* ── 設問カード ── */
+.q-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 22px 24px;
+  margin-bottom: 18px;
+  box-shadow: 0 2px 8px var(--shadow);
+  transition: border-color 0.3s;
+}
+.q-card.answered { border-color: var(--accent3); }
+.q-card.reversed-item { border-left: 4px solid var(--accent2); }
+
+.q-meta {
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 10px;
+}
+.q-num {
+  font-size: 0.72rem; font-weight: 700;
+  color: var(--muted); letter-spacing: 0.06em;
+}
+.q-tag {
+  font-size: 0.68rem; padding: 2px 8px;
+  border-radius: 20px; font-weight: 500;
+}
+.tag-p1 { background: rgba(139,78,107,0.12); color: var(--accent); }
+.tag-p2 { background: rgba(78,107,139,0.12); color: var(--accent2); }
+.tag-p3 { background: rgba(107,139,78,0.12); color: var(--accent3); }
+.tag-rev { background: rgba(78,107,139,0.18); color: var(--accent2); font-style: italic; }
+
+.q-text { font-size: 0.97rem; line-height: 1.7; color: var(--ink); margin-bottom: 14px; }
+
+.options { display: flex; gap: 8px; flex-wrap: wrap; }
+.option-btn {
+  flex: 1; min-width: 100px;
+  padding: 9px 6px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  background: white;
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: var(--ink);
+  text-align: center;
+}
+.option-btn:hover { border-color: var(--accent); background: #fdf3f7; }
+.option-btn.selected-3 { background: #f5e8ed; border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.option-btn.selected-2 { background: #edf2f8; border-color: var(--accent2); color: var(--accent2); font-weight: 600; }
+.option-btn.selected-1 { background: #f0f5ee; border-color: var(--accent3); color: var(--accent3); font-weight: 600; }
+.option-btn.selected-0 { background: #f5f5f5; border-color: #bbb; color: #777; font-weight: 600; }
+
+/* ── 送信エリア ── */
+#submit-area {
+  text-align: center; margin-top: 32px;
+  opacity: 0.4; pointer-events: none; transition: opacity 0.4s;
+}
+#submit-area.ready { opacity: 1; pointer-events: all; }
+.submit-btn {
+  background: var(--accent);
+  color: white; border: none;
+  padding: 14px 48px; border-radius: 40px;
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: 1rem; font-weight: 500;
+  cursor: pointer; transition: all 0.2s;
+  letter-spacing: 0.05em;
+}
+.submit-btn:hover { background: #7a3d5a; transform: translateY(-1px); }
+.submit-note { font-size: 0.8rem; color: var(--muted); margin-top: 10px; }
+
+/* ── 結果画面 ── */
+#result-section { display: none; }
+#result-section.show { display: block; animation: fadeUp 0.6s ease both; }
+@keyframes fadeUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:none; } }
+
+.result-header {
+  text-align: center;
+  background: var(--ink);
+  color: white;
+  border-radius: 16px;
+  padding: 36px 24px;
+  margin-bottom: 28px;
+}
+.result-type { font-size: 0.75rem; letter-spacing: 0.15em; color: #aaa; margin-bottom: 8px; }
+.result-title {
+  font-family: 'Noto Serif JP', serif;
+  font-size: 1.6rem; font-weight: 600; margin-bottom: 6px;
+}
+.result-nickname {
+  display: inline-block;
+  background: rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.3);
+  border-radius: 20px;
+  padding: 4px 16px;
+  font-size: 0.85rem;
+  color: #ddd;
+  margin-bottom: 14px;
+  letter-spacing: 0.02em;
+}
+.result-desc { font-size: 0.9rem; line-height: 1.75; color: #ccc; }
+
+.score-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 24px; }
+.score-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px; padding: 16px;
+  text-align: center;
+}
+.score-label { font-size: 0.72rem; color: var(--muted); margin-bottom: 6px; }
+.score-val { font-size: 1.8rem; font-weight: 700; }
+.score-val.high { color: var(--accent); }
+.score-val.mid  { color: var(--accent2); }
+.score-val.low  { color: var(--accent3); }
+.score-bar-wrap { height: 4px; background: var(--border); border-radius: 2px; margin-top: 8px; }
+.score-bar-fill { height: 100%; border-radius: 2px; transition: width 1s ease; }
+
+/* ── 正直度チェック ── */
+.honesty-card {
+  background: #f0f5ee;
+  border: 1.5px solid var(--accent3);
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin-bottom: 24px;
+}
+.honesty-card h3 {
+  font-size: 0.95rem; font-weight: 700;
+  color: var(--accent3); margin-bottom: 12px;
+}
+.honesty-options { display: flex; gap: 10px; flex-wrap: wrap; }
+.honesty-btn {
+  flex: 1; min-width: 120px;
+  padding: 10px 8px;
+  border: 1.5px solid var(--accent3);
+  border-radius: 8px; background: white;
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: 0.85rem; cursor: pointer;
+  transition: all 0.2s; color: var(--accent3);
+  text-align: center;
+}
+.honesty-btn:hover { background: var(--accent3); color: white; }
+.honesty-btn.selected { background: var(--accent3); color: white; font-weight: 600; }
+.honesty-response {
+  margin-top: 14px;
+  padding: 12px 16px;
+  background: rgba(107,139,78,0.08);
+  border-radius: 8px;
+  font-size: 0.88rem;
+  line-height: 1.75;
+  color: #3a4a2e;
+  display: none;
+}
+.honesty-response.show { display: block; }
+
+/* ── AIアドバイス ── */
+.ai-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 28px 24px;
+  margin-bottom: 24px;
+}
+.ai-card h3 {
+  font-family: 'Noto Serif JP', serif;
+  font-size: 1rem; font-weight: 600;
+  color: var(--ink); margin-bottom: 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+#ai-advice {
+  font-size: 0.93rem; line-height: 1.85;
+  color: #2a2a3e; white-space: pre-wrap;
+}
+.loading-dots span {
+  display: inline-block;
+  animation: blink 1.2s infinite;
+  color: var(--accent); font-size: 1.2rem; margin: 0 2px;
+}
+.loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+.loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes blink { 0%,80%,100%{opacity:0.2} 40%{opacity:1} }
+
+.restart-btn {
+  display: block; width: 100%; max-width: 240px;
+  margin: 0 auto; padding: 12px;
+  border: 1.5px solid var(--muted); border-radius: 40px;
+  background: transparent; color: var(--muted);
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: 0.9rem; cursor: pointer; text-align: center;
+  transition: all 0.2s;
+}
+.restart-btn:hover { border-color: var(--ink); color: var(--ink); }
+
+/* ── 区切り ── */
+.part-divider {
+  display: flex; align-items: center; gap: 12px;
+  margin: 28px 0 20px;
+}
+.part-divider-line { flex: 1; height: 1px; background: var(--border); }
+.part-divider-label {
+  font-size: 0.75rem; font-weight: 700;
+  letter-spacing: 0.1em; color: var(--muted);
+  white-space: nowrap;
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- ヘッダー -->
+  <div class="header">
+    <h1>支援者　自己点検ツール</h1>
+    <div class="sub">動機の層を知る ── 自分のコップを確認する15分</div>
+  </div>
+
+  <!-- 冒頭注意書き -->
+  <!-- 松本先生の言葉 -->
+  <div style="background:#1a1a2e;border-radius:12px;padding:20px 24px;margin-bottom:16px;text-align:center;">
+    <div style="font-size:0.72rem;letter-spacing:0.15em;color:#aaa;margin-bottom:8px;">松本俊彦先生（国立精神神経医療研究センター）</div>
+    <div style="font-family:'Noto Serif JP',serif;font-size:1.15rem;color:#f5f0e8;font-weight:600;letter-spacing:0.04em;">
+      「持続可能でこそ、価値がある」
+    </div>
+  </div>
+
+  <!-- ゴールイメージ -->
+  <div style="background:#f0f5ee;border:1.5px solid #6b8b4e;border-radius:12px;padding:18px 24px;margin-bottom:20px;">
+    <div style="font-size:0.75rem;font-weight:700;color:#6b8b4e;letter-spacing:0.08em;margin-bottom:10px;">🌿 このツールが目指す支援者像</div>
+    <div style="font-size:0.93rem;line-height:1.8;color:#2a3a24;">
+      「助けてあげる」ではなく、<strong>ただそこにいる存在として</strong>関わることができる支援者。<br>
+      自分のコップを満たしながら、無理せず関わり続けられる支援者。<br>
+      そういう支援者が束になることで、地域の社会環境が変わっていく。
+    </div>
+  </div>
+
+  <div class="notice-card">
+    <div class="notice-title">📋 はじめる前に</div>
+    この点検ツールには、「正しく見せやすい問い」と「そうでない問い」が混在しています。
+    答えを操作しようとしたとき、どんな気持ちが出てきたか——その気づき自体が、このツールの本当の目的です。<br><br>
+    スコアや診断タイプより、<strong>自分の内側でどこかが引っかかったか</strong>に注目してください。
+    <div class="notice-key">
+      「正直に答えられなかった」と感じたら、それも大切な自己点検の結果です。
+    </div>
+  </div>
+
+  <!-- 設問セクション -->
+  <div id="quiz-section">
+    <div class="progress-wrap">
+      <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+      <div class="progress-label" id="progress-label">0 / 18 回答済み</div>
+    </div>
+    <div id="questions-container"></div>
+    <div id="submit-area">
+      <button class="submit-btn" onclick="showResult()">結果を見る</button>
+      <div class="submit-note">全問回答後に押せるようになります</div>
+    </div>
+  </div>
+
+  <!-- 結果セクション -->
+  <div id="result-section">
+    <div class="result-header">
+      <div class="result-type">診断タイプ</div>
+      <div class="result-title" id="result-title"></div>
+      <div class="result-nickname" id="result-nickname"></div>
+      <div class="result-desc" id="result-desc"></div>
+    </div>
+
+    <div class="score-grid" id="score-grid"></div>
+
+    <!-- ゴールイメージ（結果画面） -->
+    <div style="background:#1a1a2e;border-radius:12px;padding:20px 24px;margin-bottom:24px;">
+      <div style="font-size:0.72rem;letter-spacing:0.12em;color:#aaa;margin-bottom:10px;">目指す支援者像</div>
+      <div style="font-size:0.92rem;line-height:1.85;color:#ddd;">
+        支援臭を放たず、ただそこにいる存在として関わる。<br>
+        自分のコップを満たしながら、無理せず続けられる。<br>
+        <span style="color:#d4a84b;font-weight:600;">「持続可能でこそ、価値がある」</span>
+        <span style="font-size:0.78rem;color:#999;"> ── 松本俊彦先生</span>
+      </div>
+      <div style="margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.1);font-size:0.82rem;color:#aaa;">
+        今日の点検は、その支援者に近づくための一歩です。
+      </div>
+    </div>
+    <div class="honesty-card">
+      <h3>🪞 正直度を自己評価してみてください</h3>
+      <div class="honesty-options">
+        <button class="honesty-btn" onclick="selectHonesty(this, 'A')">ほぼ正直に答えられた</button>
+        <button class="honesty-btn" onclick="selectHonesty(this, 'B')">やや見栄えよく答えた気がする</button>
+        <button class="honesty-btn" onclick="selectHonesty(this, 'C')">かなり操作していたと思う</button>
+      </div>
+      <div class="honesty-response" id="honesty-response"></div>
+    </div>
+
+    <div class="ai-card">
+      <h3>✦ あなたへのメッセージ</h3>
+      <div id="ai-advice"><div class="loading-dots"><span>●</span><span>●</span><span>●</span></div></div>
+    </div>
+
+    <button class="restart-btn" onclick="restart()">もう一度やり直す</button>
+  </div>
+
+</div>
+
+<script>
+// ==========================================
+// 設問データ（reverseがtrueの問いは逆転採点）
+// ==========================================
+const ALL_QUESTIONS = [
+  // Part 1：承認・感謝への依存（正順）
+  { id:'p1a', part:1, text:'相手に感謝されなかったとき、モヤモヤや落胆を感じる', reverse:false },
+  { id:'p1b', part:1, text:'支援がうまくいかないと、相手のせいよりも「自分が否定された」感覚になる', reverse:false },
+  { id:'p1c', part:1, text:'支援の場にいると、日常より「自分らしい」「生き生きしている」感じがある', reverse:false },
+  // Part 1：逆転項目（「ない」と答えると実はリスクが高い）
+  { id:'p1d', part:1, text:'支援がうまくいかなくても、自分の価値は変わらないと思える', reverse:true },
+  { id:'p1e', part:1, text:'感謝されない支援でも、続ける意味があると感じられる', reverse:true },
+
+  // Part 2：相手への期待・関係維持（正順）
+  { id:'p2a', part:2, text:'「この人は私がいないとダメだ」と思うことがある', reverse:false },
+  { id:'p2b', part:2, text:'相手が別の支援者や機関に頼ったとき、少し面白くない気持ちになる', reverse:false },
+  { id:'p2c', part:2, text:'支援中、相手の話より自分の経験・意見を話したくなることが多い', reverse:false },
+  // Part 2：逆転項目
+  { id:'p2d', part:2, text:'相手が自分のもとを離れて自立していくとき、純粋に嬉しいと感じる', reverse:true },
+  { id:'p2e', part:2, text:'他の支援者が相手をうまく支えているのを見て、安心できる', reverse:true },
+
+  // Part 3：日常の自己充足不足（正順）
+  { id:'p3a', part:3, text:'支援の仕事・活動がないと、自分の存在意義を感じにくい', reverse:false },
+  { id:'p3b', part:3, text:'親しい人間関係（家族・友人）において、満たされない感覚が続いている', reverse:false },
+  { id:'p3c', part:3, text:'休息や趣味より、支援活動を優先することが多い', reverse:false },
+  // Part 3：逆転項目
+  { id:'p3d', part:3, text:'支援から離れた時間（休日や趣味）で、気持ちが軽くなることがある', reverse:true },
+  { id:'p3e', part:3, text:'支援者としての自分とは別の「ただの自分」を大切にできている', reverse:true },
+
+  // 追加：気づき促進問い（ニュートラル）
+  { id:'p1f', part:1, text:'支援をしている自分を、誰かに見ていてほしいと感じることがある', reverse:false },
+  { id:'p2f', part:2, text:'相手が「もう大丈夫です」と離れていくと、寂しさや物足りなさを感じる', reverse:false },
+  { id:'p3f', part:3, text:'「自分は人より共感力が高い」という自負がある', reverse:false },
+];
+
+// ランダムシャッフル（毎回順番が変わる）
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+const QUESTIONS = shuffle(ALL_QUESTIONS);
+const scores = {};
+const TOTAL = QUESTIONS.length;
+
+const OPTIONS = [
+  { label:'よくある', val:3 },
+  { label:'時々ある', val:2 },
+  { label:'あまりない', val:1 },
+  { label:'ほぼない', val:0 },
+];
+
+const TAG_MAP = { 1:'tag-p1', 2:'tag-p2', 3:'tag-p3' };
+const TAG_LABEL = { 1:'承認・感謝', 2:'相手への期待', 3:'日常の充足' };
+
+function renderQuestions() {
+  const container = document.getElementById('questions-container');
+  container.innerHTML = '';
+  QUESTIONS.forEach((q, idx) => {
+    const card = document.createElement('div');
+    card.className = 'q-card' + (q.reverse ? ' reversed-item' : '');
+    card.id = 'card-' + q.id;
+
+    const tagClass = TAG_MAP[q.part];
+    const tagLabel = TAG_LABEL[q.part];
+
+    card.innerHTML = `
+      <div class="q-meta">
+        <span class="q-num">Q${idx + 1}</span>
+        <span class="q-tag ${tagClass}">${tagLabel}</span>
+        ${q.reverse ? '<span class="q-tag tag-rev">着目ポイント</span>' : ''}
+      </div>
+      <div class="q-text">${q.text}</div>
+      <div class="options" id="opts-${q.id}"></div>
+    `;
+    container.appendChild(card);
+
+    const optsDiv = card.querySelector(`#opts-${q.id}`);
+    OPTIONS.forEach(opt => {
+      const btn = document.createElement('button');
+      btn.className = 'option-btn';
+      btn.textContent = opt.label;
+      btn.onclick = () => selectOption(q.id, opt.val, btn, q.reverse);
+      optsDiv.appendChild(btn);
+    });
+  });
+}
+
+function selectOption(qid, rawVal, btn, reverse) {
+  // 逆転採点
+  const scoreVal = reverse ? (3 - rawVal) : rawVal;
+  scores[qid] = scoreVal;
+
+  const card = document.getElementById('card-' + qid);
+  card.classList.add('answered');
+
+  const btns = card.querySelectorAll('.option-btn');
+  btns.forEach(b => b.className = 'option-btn');
+  btn.className = 'option-btn selected-' + rawVal;
+
+  updateProgress();
+}
+
+function updateProgress() {
+  const done = Object.keys(scores).length;
+  const pct = (done / TOTAL) * 100;
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('progress-label').textContent = `${done} / ${TOTAL} 回答済み`;
+  if (done === TOTAL) document.getElementById('submit-area').classList.add('ready');
+}
+
+// ==========================================
+// 診断ロジック
+// ==========================================
+const PATTERNS = [
+  {
+    type: 'A',
+    title: '自己充足型支援者',
+    nickname: 'コップが満ちている人',
+    desc: '3つのスコアがいずれも低く、あなたのコップは比較的満ちています。支援が相手のためになっている状態に近い。この状態を意識的に維持し続けることが課題です。',
+    barColor: '#6b8b4e',
+  },
+  {
+    type: 'B',
+    title: '揺れ動く支援者',
+    nickname: '気づきの入口にいる人',
+    desc: 'スコアが混在しています。充足と渇きの間を揺れる状態。「気づいている」こと自体が、この段階では最も重要な力です。',
+    barColor: '#4e6b8b',
+  },
+  {
+    type: 'C',
+    title: '承認渇望傾向あり',
+    nickname: '「ありがとう」が燃料になっている人',
+    desc: 'Part1のスコアが高く、感謝・承認が支援の動力になっている可能性があります。相手の変化より、自分への反応に敏感になっているかもしれません。',
+    barColor: '#8b4e6b',
+  },
+  {
+    type: 'D',
+    title: '関係維持傾向あり',
+    nickname: '「必要とされたい」が隠れている人',
+    desc: 'Part2のスコアが高く、相手との関係継続を望む傾向があります。相手の自立が「終わり」に感じられるとき、支援の目的が揺らいでいるサインかもしれません。',
+    barColor: '#8b6a4e',
+  },
+  {
+    type: 'E',
+    title: '自己充足不足・要注意',
+    nickname: 'コップが空になりかけている人',
+    desc: 'Part3のスコアが高く、支援者自身のコップが空になりつつあるサインが出ています。バーンアウトや共依存への注意が必要な段階です。',
+    barColor: '#c0622a',
+  },
+];
+
+function getPattern(p1, p2, p3) {
+  const total = p1 + p2 + p3;
+  if (total <= 10) return PATTERNS[0]; // 自己充足型
+  if (p1 >= 10) return PATTERNS[2];   // 承認渇望
+  if (p2 >= 10) return PATTERNS[3];   // 関係維持
+  if (p3 >= 10) return PATTERNS[4];   // 自己充足不足
+  return PATTERNS[1];                  // 揺れ動く
+}
+
+function showResult() {
+  document.getElementById('quiz-section').style.display = 'none';
+  const res = document.getElementById('result-section');
+  res.style.display = 'block';
+  setTimeout(() => res.classList.add('show'), 10);
+
+  // スコア計算（Part別）
+  const partScores = { 1:0, 2:0, 3:0 };
+  const partCounts = { 1:0, 2:0, 3:0 };
+  QUESTIONS.forEach(q => {
+    if (scores[q.id] !== undefined) {
+      partScores[q.part] += scores[q.id];
+      partCounts[q.part]++;
+    }
+  });
+  const p1 = partScores[1], p2 = partScores[2], p3 = partScores[3];
+  const p1max = partCounts[1] * 3;
+  const p2max = partCounts[2] * 3;
+  const p3max = partCounts[3] * 3;
+
+  const pattern = getPattern(p1, p2, p3);
+
+  document.getElementById('result-title').textContent = pattern.title;
+  document.getElementById('result-nickname').textContent = '＝ ' + pattern.nickname;
+  document.getElementById('result-desc').textContent = pattern.desc;
+
+  const scoreGrid = document.getElementById('score-grid');
+  const scoreItems = [
+    { label:'承認・感謝への依存', val:p1, max:p1max, color:'var(--accent)' },
+    { label:'相手への期待', val:p2, max:p2max, color:'var(--accent2)' },
+    { label:'日常の自己充足', val:p3, max:p3max, color:'var(--accent3)' },
+  ];
+  const levelClass = ['low','low','mid','mid','high','high'];
+  scoreGrid.innerHTML = scoreItems.map(s => {
+    const pct = Math.round((s.val / s.max) * 100);
+    const lvl = pct > 60 ? 'high' : pct > 30 ? 'mid' : 'low';
+    return `
+      <div class="score-card">
+        <div class="score-label">${s.label}</div>
+        <div class="score-val ${lvl}">${s.val}<span style="font-size:0.6em;font-weight:400">/${s.max}</span></div>
+        <div class="score-bar-wrap">
+          <div class="score-bar-fill" style="width:${pct}%;background:${s.color}"></div>
+        </div>
+      </div>`;
+  }).join('');
+
+  // AI アドバイス
+  const highItems = QUESTIONS
+    .filter(q => (scores[q.id] || 0) >= 2)
+    .map(q => q.text);
+  const qSummary = highItems.length > 0 ? highItems.join('\n') : '特に高頻度の項目なし';
+  fetchAIAdvice(pattern, p1, p2, p3, qSummary);
+
+  window.scrollTo(0, 0);
+}
+
+// ==========================================
+// 正直度セルフチェック
+// ==========================================
+const HONESTY_MESSAGES = {
+  A: 'その正直さ自体が、支援者としての誠実さの表れです。スコアと診断タイプを、今の自分の状態を知る出発点として使ってください。',
+  B: '「やや見栄えよく」と自覚できていること自体、とても重要な気づきです。どの問いで操作したくなったか——その問いこそ、あなたが最も向き合いたい場所かもしれません。',
+  C: '正直に「操作していた」と言えたこと、それだけで十分な自己点検です。スコアより、「どういう自分を見せたかったのか」を静かに問い直してみてください。支援臭の点検は、そこから始まります。',
+};
+
+function selectHonesty(btn, key) {
+  document.querySelectorAll('.honesty-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  const resp = document.getElementById('honesty-response');
+  resp.textContent = HONESTY_MESSAGES[key];
+  resp.classList.add('show');
+}
+
+// ==========================================
+// Anthropic API（AIアドバイス）
+// ==========================================
+async function fetchAIAdvice(pattern, p1, p2, p3, qSummary) {
+  const adviceEl = document.getElementById('ai-advice');
+  adviceEl.innerHTML = '<div class="loading-dots"><span>●</span><span>●</span><span>●</span></div>';
+
+  const prompt = `あなたは薬物乱用防止支援者向けの自己点検ツールの診断AIです。
+以下の回答結果に基づき、支援者本人への温かく、かつ核心をつくメッセージを生成してください。
+
+【診断タイプ】${pattern.title}
+【スコア】
+- Part1（承認・感謝への依存）: ${p1}点
+- Part2（相手への期待・関係維持）: ${p2}点
+- Part3（日常の自己充足不足）: ${p3}点
+【特に引っかかった可能性のある項目】
+${qSummary}
+
+【出力の要件】
+- 400〜500字程度
+- 責める・断定するトーンは避ける
+- 「気づきは力である」という前提で書く
+- 「操作しようとした気持ちが出たなら、それも大切な情報」という視点を自然に織り込む
+- 3つのブロック：①今の状態の理解、②最も重要な一つの気づき、③今週から始められる具体的行動（1〜2個）
+- 敬体（〜です・〜ます）
+- 支援者としての誇りを損なわない言葉
+- Markdownなし、プレーンテキスト`;
+
+  try {
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 1000,
+        messages: [{ role: "user", content: prompt }]
+      })
+    });
+    const data = await response.json();
+    const text = data.content?.find(c => c.type === 'text')?.text || '';
+    adviceEl.textContent = text || getFallback(pattern);
+  } catch(e) {
+    adviceEl.textContent = getFallback(pattern);
+  }
+}
+
+function getFallback(pattern) {
+  const map = {
+    A: 'あなたのコップは比較的満ちています。この状態を意識的に維持するため、定期的な自己点検の習慣を続けてください。今週、支援とは関係のない場で「自分が喜ぶこと」を一つ確認してみてください。',
+    B: '揺れている自分に気づいていること自体が、変容の始まりです。「操作しようとした問い」があったなら、そこにこそ向き合うべきテーマがあります。信頼できる同僚と、今日感じたことを話してみてください。',
+    C: '感謝されたい気持ちは人として自然です。ただ、その渇きを相手に満たしてもらおうとするとき、支援は少しずつ歪んでいきます。今週、支援とは関係のない場所で「自分が喜ぶこと」を一つしてみてください。',
+    D: '相手の自立が「関係の終わり」に感じられるとき、支援の目的が揺らいでいるサインです。「相手が離れていくとき、どんな気持ちになるか」を静かに観察してみてください。',
+    E: '今のあなた自身が、休息と充足を必要としています。空のコップで人に水を注ぐことはできません。今週は支援活動を少しだけ減らし、自分のための時間を許可してください。',
+  };
+  return map[pattern.type] || map.B;
+}
+
+// ==========================================
+// リスタート
+// ==========================================
+function restart() {
+  Object.keys(scores).forEach(k => delete scores[k]);
+  document.getElementById('quiz-section').style.display = 'block';
+  document.getElementById('result-section').style.display = 'none';
+  document.getElementById('result-section').classList.remove('show');
+  document.getElementById('progress-fill').style.width = '0%';
+  document.getElementById('progress-label').textContent = '0 / 18 回答済み';
+  document.getElementById('submit-area').classList.remove('ready');
+  document.getElementById('honesty-response').classList.remove('show');
+  document.querySelectorAll('.honesty-btn').forEach(b => b.classList.remove('selected'));
+  window.scrollTo(0, 0);
+  renderQuestions(); // シャッフルし直す
+}
+
+renderQuestions();
+</script>
+</body>
+</html>
